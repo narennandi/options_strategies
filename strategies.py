@@ -1,3 +1,4 @@
+from os import stat
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,32 +28,27 @@ class OptionStrat:
     def long_call(self, K, C, Q=1):
         payoffs =  np.array([max(s-K,0)  - C for s in self.STs])*Q
         self.payoffs = self.payoffs +payoffs
-        print(self.payoffs)
         self._add_to_self('call', K, C, 1, Q)
     
     def short_call(self, K, C, Q=1):
         payoffs =  np.array([max(s-K,0) * -1 + C for s in self.STs])*Q
         self.payoffs = self.payoffs + payoffs
-        print(self.payoffs)
         self._add_to_self('call', K, C, -1, Q)
     
     def long_put(self, K, P, Q=1):
         payoffs = np.array([max(K-s,0) - P for s in self.STs])*Q
         self.payoffs = self.payoffs + payoffs
-        print(self.payoffs)
         self._add_to_self('put', K, P, 1, Q)
       
     def short_put(self, K, P, Q=1):
         payoffs = np.array([max(K-s,0)*-1 + P for s in self.STs])*Q
         self.payoffs = self.payoffs + payoffs
-        print(self.payoffs)
         self._add_to_self('put', K, P, -1, Q)
         
     def _add_to_self(self, type_, K, price, side, Q):
         o = Option(type_, K, price, side)
         for _ in range(Q):
             self.instruments.append(o)
-        
           
     def plot(self, **params):
         plt.plot(self.STs, self.payoffs,**params)
@@ -69,8 +65,10 @@ class OptionStrat:
     def describe(self):
         max_profit  = self.payoffs.max()
         max_loss = self.payoffs.min()
+
         print(f"Max Profit: ${round(max_profit,3)}")
         print(f"Max loss: ${round(max_loss,3)}")
+        
         c = 0
         for o in self.instruments:
             print(o)
@@ -84,3 +82,11 @@ class OptionStrat:
                 c -+ o.price
         
         print(f"Cost of entering position ${c}")
+    
+    def calculate_metrics(self):
+        max_profit  = round(self.payoffs.max(),3)
+        max_loss = round(self.payoffs.min(),3)
+        probability_of_success = round(((abs(max_loss) - abs(max_profit)) / abs(max_loss)),3)
+        risk_to_reward_ratio = round(abs(max_loss / max_profit),3)
+        
+        return max_profit, max_loss, probability_of_success, risk_to_reward_ratio
